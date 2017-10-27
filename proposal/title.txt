@@ -1,1 +1,1 @@
-Reinforcement Learning: Video Game Race Car
+Reinforcement Learning: Autonomous Race Car
