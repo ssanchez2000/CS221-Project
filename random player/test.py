@@ -12,17 +12,22 @@ import matplotlib.pyplot as plt
 #8- accelrate and left (17 steps)
 game_choice='MountainCar-v0'
 env = gym.make('Enduro-v0')
-name="eight/"
-for i_episode in range(1):
+#name="eight/"
+for i_episode in range(10):
 	observation = env.reset()
-	for t in range(100):
+	#for t in range(1000):
+	t=0
+	done=False
+	while(not done):
+		t=t+1
 		env.render()
 		state=observation
-		plt.imshow(observation)
-		plt.savefig(name+"img"+str(t))
 		action=env.action_space.sample()
-		action=8
+		action=1
 		observation,reward,done,info=env.step(action)
+		if(done):
+			plt.imshow(observation)
+			plt.savefig("img_"+str(i_episode+1)+"_"+str(t))
 		if(reward !=0):
 			print("reward: ",reward)
 		if done:
