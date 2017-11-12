@@ -1,5 +1,7 @@
 import numpy as np
+import gym
 
+env = gym.make('Enduro-v0')
 
 class MDPAlgorithm:
     # Set:
@@ -46,7 +48,7 @@ class ValueIteration(MDPAlgorithm):
 
         # Compute the optimal policy now
         pi = computeOptimalPolicy(mdp, V)
-        print "ValueIteration: %d iterations" % numIters
+        print("ValueIteration: %d iterations" % numIters)
         self.pi = pi
         self.V = V
 
@@ -70,16 +72,20 @@ class MDP:
     # MDPAlgorithms to know which states to compute values and policies for.
     # This function sets |self.states| to be the set of all states.
     def computeStates(self):
-        self.states = set()
+        #self.states = set()
+        self.states=list()
         queue = []
-        self.states.add(self.startState())
+        #self.states.add(self.startState())
+        self.states.append(self.startState())
         queue.append(self.startState())
         while len(queue) > 0:
             state = queue.pop()
             for action in self.actions(state):
                 for newState, prob, reward in self.succAndProbReward(state, action):
-                    if newState not in self.states:
-                        self.states.add(newState)
+                    if(not any((newState == x).all() for x in self.states)):
+                    #if newState not in self.states:
+                        #self.states.add(newState)
+                        self.states.append(newState)
                         queue.append(newState)
         # print "%d states" % len(self.states)
 # print self.states
@@ -87,8 +93,8 @@ class MDP:
 class player(MDP):
     #HErwe obs is a numpy array of image observation
     #where env is atari env
-    def __init__(self,obs,env):
-        self.obs = obs
+    def __init__(self,env):
+        #self.obs = obs
         self.env = env
     def startState(self):
         return env.reset()
@@ -100,7 +106,6 @@ class player(MDP):
     def succAndProbReward(self, state, action):
         result = []
         obs,reward,done,info = self.env.step(action)
-
         #end state check
         if done:
             return []
@@ -112,3 +117,10 @@ class player(MDP):
 
     def discount(self):
         return 1
+
+for i_episode in range(1):
+    observation = env.reset()
+    mdp = player(env)
+    mdp.computeStates()
+    algorithm = ValueIteration()
+    algorithm.solve(mdp, .001)
