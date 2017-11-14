@@ -2,8 +2,9 @@ import numpy as np
 import gym
 import hashlib
 from collections import defaultdict
-
+from PIL import Image
 env = gym.make('Enduro-v0')
+
 def hashState(state):
     return hashlib.sha256(state).hexdigest()
 
@@ -23,8 +24,8 @@ class ValueIteration(MDPAlgorithm):
     all of the values change by less than epsilon.
     The ValueIteration class is a subclass of util.MDPAlgorithm (see util.py).
     '''
-    
-    
+
+
     def solve(self, mdp, epsilon=0.001):
         mdp.computeStates()
         def computeQ(mdp, V, state, action):
@@ -39,9 +40,9 @@ class ValueIteration(MDPAlgorithm):
                 state_hash = hashState(state)
                 pi[state_hash] = max((computeQ(mdp, V, state, action), action) for action in mdp.actions(state))[1]
             return pi
-        
-        state_map = collections.defaultdict(str)
-        V = collections.defaultdict(str)  # state -> value of state
+
+        state_map = defaultdict(int)
+        V = defaultdict(int)  # state -> value of state
         numIters = 0
         while True:
             newV = {}
@@ -107,33 +108,49 @@ class player(MDP):
     def __init__(self,env):
         #self.obs = obs
         self.env = env
+        self.values={}
+        for i in range(10):
+            A=Image.open("../10digits/"+str(i)+".png")
+            A= np.array(A)
+            self.values[(A[2,2,0],A[2,5,0],A[4,1,0],A[5,1,0])]=str(i)
+
     def startState(self):
         return env.reset()
 
     def actions(self, state):
         return [0,1,2,3,4,5,6,7,8]
 
+    def reward_funct(self,state):
+        img_array=state[179:188,80:104]
+        num1=img_array[:,0:8]
+        num2=img_array[:,8:16]
+        num3=img_array[:,16:]
+        reward=self.values[(num1[2,2,0],num1[2,5,0],num1[4,1,0],num1[5,1,0])]
+        reward1=self.values[(num2[2,2,0],num2[2,5,0],num2[4,1,0],num2[5,1,0])]
+        reward2=self.values[(num3[2,2,0],num3[2,5,0],num3[4,1,0],num3[5,1,0])]
+        return reward+reward1+reward2
     #our states are obs, returns a list with tuple
     def succAndProbReward(self, state, action):
         result = []
         obs,reward,done,info = self.env.step(action)
+        reward=-int(self.reward_funct(obs))
+        print(reward)
         #end state check
         if done:
             return []
 
         prob = float(1)/float(len(self.actions(obs)))
         result.append((obs,prob,reward))
-
+        print(reward)
         return result
 
     def discount(self):
         return 1
-    
-"""
+
+
 for i_episode in range(1):
     observation = env.reset()
     mdp = player(env)
     mdp.computeStates()
     algorithm = ValueIteration()
     algorithm.solve(mdp, .001)
-"""

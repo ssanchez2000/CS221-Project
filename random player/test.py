@@ -1,7 +1,7 @@
 import gym
 import matplotlib.pyplot as plt
 from PIL import Image
-import pytesseract
+import numpy as np
 #31 steps per no (for 0)
 #0 - none (31 steps)
 #1 - accelerate (18 steps)
@@ -13,42 +13,28 @@ import pytesseract
 #7- accelerate and right (16 steps)
 #8- accelrate and left (17 steps)
 env = gym.make('Enduro-v0')
+values={}
+for i in range(10):
+	A=Image.open("../10digits/"+str(i)+".png")
+	A= np.array(A)
+	values[(A[2,2,0],A[2,5,0],A[4,1,0],A[5,1,0])]=str(i)
 
 def reward_funct(state,t):
-	key={}
-	key["a"]="0"
-	key["-,"]="2"
-	key["m"]="1"
-	key["."]="9"
-	key["s"]="8"
-	key["v:"]="7"
 	img_array=state[179:188,80:104]
 	num1=img_array[:,0:8]
 	num2=img_array[:,8:16]
 	num3=img_array[:,16:]
-
-	num1=Image.fromarray(num1)
-	num1=num1.convert('1')
-	reward=pytesseract.image_to_string(num1,config='-psm 7')
-
-	num2=Image.fromarray(num2)
-	num2=num2.convert('1')
-	reward1=pytesseract.image_to_string(num2,config='-psm 7')
-
-	num3=Image.fromarray(num3)
-	num3=num3.convert('1')
-	reward2=pytesseract.image_to_string(num3,config='-psm 7')
-	reward=key.setdefault(reward,reward)
-	reward1=key.setdefault(reward1,reward1)
-	reward2=key.setdefault(reward2,reward2)
+	reward=values[(num1[2,2,0],num1[2,5,0],num1[4,1,0],num1[5,1,0])]
+	reward1=values[(num2[2,2,0],num2[2,5,0],num2[4,1,0],num2[5,1,0])]
+	reward2=values[(num3[2,2,0],num3[2,5,0],num3[4,1,0],num3[5,1,0])]
 
 	return reward+reward1+reward2
 
 for i_episode in range(1):
 	observation = env.reset()
-	print(observation)
+	#print(observation)
 	t=0
-	done=True
+	done=False
 	while(not done):
 		t=t+1
 		#env.render()
@@ -58,8 +44,5 @@ for i_episode in range(1):
 		observation,reward,done,info=env.step(action)
 		reward=reward_funct(observation,t)
 		print(reward)
-		if(t==1):
-			break
-
 		if done:
 			print("episode finished after {} timesteps".format(t+1))

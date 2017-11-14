@@ -15,19 +15,14 @@ import pytesseract
 env = gym.make('Enduro-v0')
 
 def reward_funct(state,t):
-	key={}
-	key["a"]="0"
-	key["-,"]="2"
-	key["m"]="1"
-	key["."]="9"
-	key["s"]="8"
-	key["v:"]="7"
+
 	img_array=state[179:188,80:104]
 	num1=img_array[:,0:8]
 	num2=img_array[:,8:16]
 	num3=img_array[:,16:]
-
 	num1=Image.fromarray(num1)
+	#print("apple")
+	plt.savefig(num1,"test.png")
 	num1=num1.convert('1')
 	reward=pytesseract.image_to_string(num1,config='-psm 7')
 
@@ -46,7 +41,6 @@ def reward_funct(state,t):
 
 for i_episode in range(1):
 	observation = env.reset()
-	print(observation)
 	t=0
 	done=True
 	while(not done):
@@ -57,7 +51,7 @@ for i_episode in range(1):
 		action=1
 		observation,reward,done,info=env.step(action)
 		reward=reward_funct(observation,t)
-		print(reward)
+		#print(reward)
 		if(t==1):
 			break
 

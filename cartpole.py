@@ -65,7 +65,7 @@ def rollout(env):
         obser, r, done, info = env.step(a)
         reward+=r
         #print(env.unwrapped.ale.getFrameNumber(), env.unwrapped.ale.getEpisodeFrameNumber())
-        
+
         num=obser[179:188,96:104]
         Image.fromarray(num)
         env.render()
@@ -74,7 +74,7 @@ def rollout(env):
         if len(list_num)==10:
             return list_num
             break
-        if done: 
+        if done:
             break
         if human_wants_restart: break
         while human_sets_pause:
@@ -88,3 +88,7 @@ print("No keys pressed is taking action 0")
 
 
 l = rollout(env)
+
+
+for i in range(10):
+    
