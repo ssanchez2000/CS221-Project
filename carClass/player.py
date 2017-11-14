@@ -1,7 +1,11 @@
 import numpy as np
 import gym
+import hashlib
+from collections import defaultdict
 
 env = gym.make('Enduro-v0')
+def hashState(state):
+    return hashlib.sha256(state).hexdigest()
 
 class MDPAlgorithm:
     # Set:
@@ -19,29 +23,35 @@ class ValueIteration(MDPAlgorithm):
     all of the values change by less than epsilon.
     The ValueIteration class is a subclass of util.MDPAlgorithm (see util.py).
     '''
+    
+    
     def solve(self, mdp, epsilon=0.001):
         mdp.computeStates()
         def computeQ(mdp, V, state, action):
             # Return Q(state, action) based on V(state).
-            return sum(prob * (reward + mdp.discount() * V[newState]) \
+            return sum(prob * (reward + mdp.discount() * V[hashState(newState)]) \
                             for newState, prob, reward in mdp.succAndProbReward(state, action))
 
         def computeOptimalPolicy(mdp, V):
             # Return the optimal policy given the values V.
             pi = {}
             for state in mdp.states:
-                pi[state] = max((computeQ(mdp, V, state, action), action) for action in mdp.actions(state))[1]
+                state_hash = hashState(state)
+                pi[state_hash] = max((computeQ(mdp, V, state, action), action) for action in mdp.actions(state))[1]
             return pi
-
-        V = collections.defaultdict(float)  # state -> value of state
+        
+        state_map = collections.defaultdict(str)
+        V = collections.defaultdict(str)  # state -> value of state
         numIters = 0
         while True:
             newV = {}
             for state in mdp.states:
                 # This evaluates to zero for end states, which have no available actions (by definition)
-                newV[state] = max(computeQ(mdp, V, state, action) for action in mdp.actions(state))
+                state_hash = hashState(state)
+                newV[state_hash] = max(computeQ(mdp, V, state, action) for action in mdp.actions(state))
+                state_map[state_hash] = state
             numIters += 1
-            if max(abs(V[state] - newV[state]) for state in mdp.states) < epsilon:
+            if max(abs(V[hashState(state)] - newV[hashState(state)]) for state in mdp.states) < epsilon:
                 V = newV
                 break
             V = newV
@@ -51,6 +61,7 @@ class ValueIteration(MDPAlgorithm):
         print("ValueIteration: %d iterations" % numIters)
         self.pi = pi
         self.V = V
+        self.state_map = state_map
 
 class MDP:
     # Return the start state.
@@ -117,10 +128,12 @@ class player(MDP):
 
     def discount(self):
         return 1
-
+    
+"""
 for i_episode in range(1):
     observation = env.reset()
     mdp = player(env)
     mdp.computeStates()
     algorithm = ValueIteration()
     algorithm.solve(mdp, .001)
+"""
