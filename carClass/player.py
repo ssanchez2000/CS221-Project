@@ -54,6 +54,7 @@ class ValueIteration(MDPAlgorithm):
             numIters += 1
             if max(abs(V[hashState(state)] - newV[hashState(state)]) for state in mdp.states) < epsilon:
                 V = newV
+                print("hmm")
                 break
             V = newV
 
@@ -95,8 +96,6 @@ class MDP:
             for action in self.actions(state):
                 for newState, prob, reward in self.succAndProbReward(state, action):
                     if(not any((newState == x).all() for x in self.states)):
-                    #if newState not in self.states:
-                        #self.states.add(newState)
                         self.states.append(newState)
                         queue.append(newState)
         # print "%d states" % len(self.states)
@@ -133,24 +132,23 @@ class player(MDP):
     def succAndProbReward(self, state, action):
         result = []
         obs,reward,done,info = self.env.step(action)
-        reward=-int(self.reward_funct(obs))
-        print(reward)
+        reward=201-int(self.reward_funct(obs))
+        #print(reward)
         #end state check
         if done:
             return []
 
         prob = float(1)/float(len(self.actions(obs)))
         result.append((obs,prob,reward))
-        print(reward)
         return result
 
     def discount(self):
         return 1
 
-
-for i_episode in range(1):
-    observation = env.reset()
-    mdp = player(env)
-    mdp.computeStates()
-    algorithm = ValueIteration()
+observation = env.reset()
+mdp = player(env)
+mdp.computeStates()
+algorithm = ValueIteration()
+for i_episode in range(2):
     algorithm.solve(mdp, .001)
+    #print(algorithm.pi.values(),algorithm.V.values())
