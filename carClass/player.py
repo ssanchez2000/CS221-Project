@@ -150,5 +150,5 @@ mdp = player(env)
 mdp.computeStates()
 algorithm = ValueIteration()
 for i_episode in range(2):
-    algorithm.solve(mdp, .001)
+    algorithm.solve(mdp, .00001)
     #print(algorithm.pi.values(),algorithm.V.values())
