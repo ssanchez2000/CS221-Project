@@ -124,7 +124,7 @@ class player(MDP):
         return env.reset()
 
     def actions(self, state):
-        return [1,2,4,5,6,7,8]
+        return [1,7,8]
         #return [0,1,2,3,4,5,6,7,8]
 
     def reward_funct(self,state):
@@ -153,7 +153,7 @@ class player(MDP):
 
 observation = env.reset()
 mdp = player(env)
-m=1 # no of games we want it to run
+m=20 # no of games we want it to run
 if(os.path.isfile('mdp_states_'+str(m)+'.pkl')):
     print("looks like you've already saved for m="+str(m))
     print("do you want to save again?")
@@ -175,7 +175,7 @@ with open('mdp_states_'+str(m)+'.pkl', 'rb') as inputfile:
 
 algorithm = ValueIteration()
 algorithm.solve(mdp, .001)
-
+#print(algorithm.pi.values())
 #for i_episode in range(1):
     #print(algorithm.pi.values())
 print("done")
