@@ -3,6 +3,10 @@ import gym
 import hashlib
 from collections import defaultdict
 from PIL import Image
+import pickle
+import os.path
+import random
+
 env = gym.make('Enduro-v0')
 
 def hashState(state):
@@ -27,7 +31,7 @@ class ValueIteration(MDPAlgorithm):
 
 
     def solve(self, mdp, epsilon=0.001):
-        mdp.computeStates()
+        #mdp.computeStates()
         def computeQ(mdp, V, state, action):
             # Return Q(state, action) based on V(state).
             return sum(prob * (reward + mdp.discount() * V[hashState(newState)]) \
@@ -54,7 +58,6 @@ class ValueIteration(MDPAlgorithm):
             numIters += 1
             if max(abs(V[hashState(state)] - newV[hashState(state)]) for state in mdp.states) < epsilon:
                 V = newV
-                print("hmm")
                 break
             V = newV
 
@@ -84,25 +87,29 @@ class MDP:
     # Compute set of states reachable from startState.  Helper function for
     # MDPAlgorithms to know which states to compute values and policies for.
     # This function sets |self.states| to be the set of all states.
-    def computeStates(self):
+    # m - no of games to run
+    def computeStates(self,m):
         #self.states = set()
         self.states=list()
         queue = []
         #self.states.add(self.startState())
         self.states.append(self.startState())
-        queue.append(self.startState())
-        while len(queue) > 0:
-            state = queue.pop()
-            for action in self.actions(state):
+        for i in range(m):
+            queue.append(self.startState())
+            while len(queue) > 0:
+                state = queue.pop()
+                action=random.choice(self.actions(state))
+                #for action in self.actions(state):
                 for newState, prob, reward in self.succAndProbReward(state, action):
                     if(not any((newState == x).all() for x in self.states)):
                         self.states.append(newState)
                         queue.append(newState)
+        print(len(self.states))
         # print "%d states" % len(self.states)
 # print self.states
 
 class player(MDP):
-    #HErwe obs is a numpy array of image observation
+    #HEre we obs is a numpy array of image observation
     #where env is atari env
     def __init__(self,env):
         #self.obs = obs
@@ -117,7 +124,8 @@ class player(MDP):
         return env.reset()
 
     def actions(self, state):
-        return [0,1,2,3,4,5,6,7,8]
+        return [1,2,4,5,6,7,8]
+        #return [0,1,2,3,4,5,6,7,8]
 
     def reward_funct(self,state):
         img_array=state[179:188,80:104]
@@ -132,9 +140,7 @@ class player(MDP):
     def succAndProbReward(self, state, action):
         result = []
         obs,reward,done,info = self.env.step(action)
-        reward=201-int(self.reward_funct(obs))
-        #print(reward)
-        #end state check
+        reward=200-int(self.reward_funct(obs))
         if done:
             return []
 
@@ -147,8 +153,29 @@ class player(MDP):
 
 observation = env.reset()
 mdp = player(env)
-mdp.computeStates()
+m=1 # no of games we want it to run
+if(os.path.isfile('mdp_states_'+str(m)+'.pkl')):
+    print("looks like you've already saved for m="+str(m))
+    print("do you want to save again?")
+    c=input()
+    if(c[0]=="y"):
+        print("fine, i hope you know what youre doing")
+        mdp.computeStates(m)
+        with open('mdp_states_'+str(m)+'.pkl', 'wb') as output:
+            pickle.dump(mdp, output, pickle.HIGHEST_PROTOCOL)
+    else:
+        print("time is money :P")
+else:
+    mdp.computeStates(m)
+    with open('mdp_states_'+str(m)+'.pkl', 'wb') as output:
+        pickle.dump(mdp, output, pickle.HIGHEST_PROTOCOL)
+
+with open('mdp_states_'+str(m)+'.pkl', 'rb') as inputfile:
+    mdp = pickle.load(inputfile)
+
 algorithm = ValueIteration()
-for i_episode in range(2):
-    algorithm.solve(mdp, .00001)
-    #print(algorithm.pi.values(),algorithm.V.values())
+algorithm.solve(mdp, .001)
+
+#for i_episode in range(1):
+    #print(algorithm.pi.values())
+print("done")
