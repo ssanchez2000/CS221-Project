@@ -7,6 +7,7 @@ import pickle
 import os.path
 import random
 import math
+import matplotlib.pyplot as plt
 env = gym.make('Enduro-v0')
 
 def hashState(state):
@@ -21,54 +22,6 @@ class MDPAlgorithm:
     def solve(self, mdp): raise NotImplementedError("Override me")
 
 
-class ValueIteration(MDPAlgorithm):
-    '''
-    Solve the MDP using value iteration.  Your solve() method must set
-    - self.V to the dictionary mapping states to optimal values
-    - self.pi to the dictionary mapping states to an optimal action
-    Note: epsilon is the error tolerance: you should stop value iteration when
-    all of the values change by less than epsilon.
-    The ValueIteration class is a subclass of util.MDPAlgorithm (see util.py).
-    '''
-
-
-    def solve(self, mdp, epsilon=0.001):
-        #mdp.computeStates()
-        def computeQ(mdp, V, state, action):
-            # Return Q(state, action) based on V(state).
-            return sum(prob * (reward + mdp.discount() * V[hashState(newState)]) \
-                            for newState, prob, reward in mdp.succAndProbReward(state, action))
-
-        def computeOptimalPolicy(mdp, V):
-            # Return the optimal policy given the values V.
-            pi = {}
-            for state in mdp.states:
-                state_hash = hashState(state)
-                pi[state_hash] = max((computeQ(mdp, V, state, action), action) for action in mdp.actions(state))[1]
-            return pi
-
-        state_map = defaultdict(int)
-        V = defaultdict(int)  # state -> value of state
-        numIters = 0
-        while True:
-            newV = {}
-            for state in mdp.states:
-                # This evaluates to zero for end states, which have no available actions (by definition)
-                state_hash = hashState(state)
-                newV[state_hash] = max(computeQ(mdp, V, state, action) for action in mdp.actions(state))
-                state_map[state_hash] = state
-            numIters += 1
-            if max(abs(V[hashState(state)] - newV[hashState(state)]) for state in mdp.states) < epsilon:
-                V = newV
-                break
-            V = newV
-
-        # Compute the optimal policy now
-        pi = computeOptimalPolicy(mdp, V)
-        print("ValueIteration: %d iterations" % numIters)
-        self.pi = pi
-        self.V = V
-        self.state_map = state_map
 
 class MDP:
     # Return the start state.
@@ -332,22 +285,44 @@ else:
 with open('mdp_states_'+str(m)+'.pkl', 'rb') as inputfile:
     mdp = pickle.load(inputfile)
 '''
-
-featureExtractor = identityFeatureExtractor
-rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0.2)
-rewards =simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
+iters = [10,20,30,40,50]
+iters_rewards = []
+for i in iters:
+    featureExtractor = identityFeatureExtractor
+    rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0.2)
+    rewards =simulate(mdp, rl, numTrials=i, maxIterations=1000, verbose=False,
                  sort=False)
-tempweights = rl.weights
-rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0)
-rl.weights = tempweights
-mdp.computeStates(1)
-rlVals = []
-for s in mdp.states:
-    rlVals.append(rl.getAction(s))
-for i in range(len(rlVals)):
-   print rlVals[i]
-print rewards
-print float(sum(rewards))/float(len(rewards))
+    tempweights = rl.weights
+    rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0)
+    rl.weights = tempweights
+    mdp.computeStates(1)
+    rlVals = []
+    for s in mdp.states:
+       rlVals.append(rl.getAction(s))
+    #for i in range(len(rlVals)):
+    #   print rlVals[i]
+    print "actions: ", set(rlVals)
+    print rewards
+    #print rewards
+    #print float(sum(rewards))/float(len(rewards))
+    iters_rewards.append(float(sum(rewards))/float(len(rewards)))
+    #lst=np.arange(1,i+1)
+    #plt.plot(lst.reshape((1,i)),np.asarray(rewards).reshape((1,i)))
+    lst = range(1,i+ 1)
+    plt.plot(lst,rewards)
+    plt.ylabel("Rewards")
+    plt.xlabel("Episode")
+    #plt.show()
+    fig_name = "numTrails_"+str(i)+".png"
+    plt.savefig(fig_name)
+    print "saved plot"
+    plt.gcf().clear()
+
+plt.plot(iters,iters_rewards)
+plt.ylabel("Average Rewards")
+plt.xlabel("Simulation: Number of Episodes")
+fig_name = "avg_rewards"
+plt.savefig(fig_name)
 
 #algorithm = ValueIteration()
 #algorithm.solve(mdp, .001)
