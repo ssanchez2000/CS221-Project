@@ -13,24 +13,68 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 
+
+### CROP 2D img y: 50:150, x: keep all
+def crop(img):
+    return img[50:150,20:320]
+
+
+
+##IMAGE LABEL REGION
+def img_label(grey_img,frameNumber):
+    # apply threshold
+    thresh = threshold_otsu(grey_img)
+    bw = closing(grey_img > thresh, square(3))
+
+    # remove artifacts connected to image border
+    cleared = clear_border(bw)
+
+    # label image regions
+    label_image = label(cleared)
+    image_label_overlay = label2rgb(label_image, image=grey_img)
+
+    car_count = 0 #count number of other cars coming up
+    #fig, ax = plt.subplots(figsize=(10, 6))
+    #ax.imshow(image_label_overlay)
+    for region in regionprops(label_image):
+        # take regions with large enough areas
+        if region.area >= 50:
+            car_count += 1
+            #draw rectangle around segmented coins
+            #minr, minc, maxr, maxc = region.bbox
+            #rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
+                                  #fill=False, edgecolor='red', linewidth=2)
+            ax.add_patch(rect)
+    #show the image with detected/boxed cars
+    #ax.set_axis_on()
+    #plt.tight_layout()
+    #plt.show()
+    #plt.savefig('frame_'+str(frameNumber)+'.png')
+    return car_count
+
+
 ##IMAGE SEGMENTATION
 
-#filename = os.path.join(skimage.data_dir,'cars.png')
-#filename = 'car_ahead'
+
+filename = 'car_ahead'
 #filename = 'no_cars'
-filename = 'cars'
+#filename = 'cars'
 image = io.imread(filename)
-grey_img = color.rgb2grey(image)
-#edges = filters.sobel(grey_img)
-edges = canny(grey_img)
+frameNumber = 1
+grey_img = crop(color.rgb2grey(image))
+edges = crop(filters.sobel(grey_img))
+car_count = img_label(grey_img,frameNumber)
+#print car_count
+#edges = crop(canny(grey_img))
 #io.imshow(edges)
 #io.show()
 #io.imshow(grey_img)
 #io.show()
 #io.imshow(grey_img - edges)
 #io.show()
-
-
+#plt.axis('on')
+#plt.imshow(edges)
+#plt.show()
 
 #fill_cars = ndi.binary_fill_holes(edges)
 #plt.imshow(fill_cars)
@@ -65,33 +109,5 @@ io.show()
 '''
 
 
-##IMAGE LABEL REGION
-'''
-# apply threshold
-thresh = threshold_otsu(grey_img)
-bw = closing(grey_img > thresh, square(3))
 
-# remove artifacts connected to image border
-cleared = clear_border(bw)
-
-# label image regions
-label_image = label(cleared)
-image_label_overlay = label2rgb(label_image, image=grey_img)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.imshow(image_label_overlay)
-
-for region in regionprops(label_image):
-    # take regions with large enough areas
-    if region.area >= 100:
-        # draw rectangle around segmented coins
-        minr, minc, maxr, maxc = region.bbox
-        rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
-                                  fill=False, edgecolor='red', linewidth=2)
-        ax.add_patch(rect)
-
-ax.set_axis_off()
-plt.tight_layout()
-plt.show()
-'''
 
