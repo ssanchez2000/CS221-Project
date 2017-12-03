@@ -13,23 +13,19 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import math
 
-### CROP 2D img y: 50:150, x: keep all
+
 '''
 def crop_car(img):
     return img[130:155,20:320]
 
 def crop_all(img):
     return img[50:155,20:320]
-'''
+
 def crop_car(img):
     return img[80:155,20:320]
 
-def crop_all(img):
-    return img[75:156,20:320]
-
-
 ##IMAGE LABEL REGION
-def img_label_all(grey_img,frameNumber):
+def img_label_all(grey_img,frameNumber,rgb_img):
     # apply threshold
     thresh = threshold_otsu(grey_img)
     bw = closing(grey_img > thresh, square(3))
@@ -47,10 +43,13 @@ def img_label_all(grey_img,frameNumber):
     for region in regionprops(label_image):
         # take regions with large enough areas
         if region.area >=50 and region.area<300:
-            car_count += 1
             #draw rectangle around segmented coins
             minr, minc, maxr, maxc = region.bbox
-	    print minr,minc,maxr,maxc
+	    #print minr,minc,maxr,maxc
+            pixel=[int((maxr+minr)/2),int((maxc+minc)/2)]
+	    car_pixel = list(rgb_img[pixel[0],pixel[1],:])
+	    if set(car_pixel) != set(agent_pixel):
+	        car_count += 1
             rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
                                   fill=False, edgecolor='red', linewidth=2)
             ax.add_patch(rect)
@@ -58,13 +57,13 @@ def img_label_all(grey_img,frameNumber):
     ax.set_axis_on()
     plt.tight_layout()
     plt.show()
-    #plt.savefig('frame_'+str(frameNumber)+'.png')
-    return car_count
+    plt.savefig('frame_'+str(frameNumber)+'.png')
+    return car_count+1
 
 
 
 ##IMAGE LABEL REGION
-def img_label_car(grey_img,frameNumber,rgb_img,):
+def img_label_car(grey_img,frameNumber,rgb_img):
     # apply threshold
     thresh = threshold_otsu(grey_img)
     bw = closing(grey_img > thresh, square(3))
@@ -88,7 +87,7 @@ def img_label_car(grey_img,frameNumber,rgb_img,):
 	    #print minr,minc,maxr,maxc
 	    pixel=[int((maxr+minr)/2),int((maxc+minc)/2)]
 	    #get agent's color pixel
-	    print rgb_img[pixel[0],pixel[1],:]
+	    #print rgb_img[pixel[0],pixel[1],:]
 	    io.imshow(rgb_img)
             io.show()
             rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
@@ -101,6 +100,42 @@ def img_label_car(grey_img,frameNumber,rgb_img,):
     plt.savefig('frame_'+str(frameNumber)+'.png')
     return car_count
 
+
+'''
+
+agent_pixel = [192, 192, 192]
+
+def crop(img):
+    return img[75:156,20:320]
+
+##IMAGE LABEL REGION
+def img_label(grey_img,frameNumber,rgb_img):
+    # apply threshold
+    thresh = threshold_otsu(grey_img)
+    bw = closing(grey_img > thresh, square(3))
+
+    # remove artifacts connected to image border
+    cleared = clear_border(bw)
+
+    # label image regions
+    label_image = label(cleared)
+    image_label_overlay = label2rgb(label_image, image=grey_img)
+
+    car_count = 0 #count number of other cars coming up
+    for region in regionprops(label_image):
+        # take regions with large enough areas
+        if region.area >=50 and region.area<300:
+            #draw rectangle around segmented coins
+            minr, minc, maxr, maxc = region.bbox
+	    #print minr,minc,maxr,maxc
+            pixel=[int((maxr+minr)/2),int((maxc+minc)/2)]
+	    car_pixel = list(rgb_img[pixel[0],pixel[1],:])
+	    if set(car_pixel) != set(agent_pixel):
+	        car_count += 1
+    #plus an additional 1 to place our agent
+    return car_count+1
+
+
 ##IMAGE SEGMENTATION
 
 
@@ -109,23 +144,22 @@ def img_label_car(grey_img,frameNumber,rgb_img,):
 ###
 
 #filename = 'car_ahead'
-filename = 'no_cars'
+#filename = 'no_cars'
 #filename = 'cars'
 #filename ='frame_1.png'
 #filename ='frame_81.png'
 #filename ='frame_179.png'
 image = io.imread(filename)
 frameNumber = 0.0
-grey_img = crop_car(color.rgb2grey(image))
+grey_img = crop(color.rgb2grey(image))
 #grey_img = crop_car(color.rgb2grey(image))
 #edges = crop_all(filters.sobel(grey_img))
-car_count = img_label_car(grey_img,frameNumber,crop_car(image))
-
-
-
-
-
+car_count = img_label(grey_img,frameNumber,crop(image))
 #print car_count
+
+
+
+
 #edges = crop(canny(grey_img))
 #io.imshow(edges)
 #io.show()
