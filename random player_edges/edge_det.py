@@ -109,7 +109,7 @@ def crop(img):
     return img[75:156,20:320]
 
 ##IMAGE LABEL REGION
-def img_label(grey_img,frameNumber,rgb_img):
+def img_label(grey_img,rgb_img):
     # apply threshold
     thresh = threshold_otsu(grey_img)
     bw = closing(grey_img > thresh, square(3))
@@ -126,7 +126,7 @@ def img_label(grey_img,frameNumber,rgb_img):
         # take regions with large enough areas
         if region.area >=50 and region.area<300:
             #draw rectangle around segmented coins
-            minr, minc, maxr, maxc = region.bbox
+            minr, minc, maxr, maxc = region.bboxs
 	    #print minr,minc,maxr,maxc
             pixel=[int((maxr+minr)/2),int((maxc+minc)/2)]
 	    car_pixel = list(rgb_img[pixel[0],pixel[1],:])
@@ -149,12 +149,12 @@ def img_label(grey_img,frameNumber,rgb_img):
 #filename ='frame_1.png'
 #filename ='frame_81.png'
 #filename ='frame_179.png'
-image = io.imread(filename)
-frameNumber = 0.0
-grey_img = crop(color.rgb2grey(image))
+#image = io.imread(filename)
+#frameNumber = 0.0
+#grey_img = crop(color.rgb2grey(image))
 #grey_img = crop_car(color.rgb2grey(image))
 #edges = crop_all(filters.sobel(grey_img))
-car_count = img_label(grey_img,frameNumber,crop(image))
+#car_count = img_label(grey_img,frameNumber,crop(image))
 #print car_count
 
 

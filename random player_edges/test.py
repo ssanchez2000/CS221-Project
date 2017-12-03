@@ -50,11 +50,12 @@ for i_episode in range(1):
  		#print t
 	        #print edge_det.img_label(edge_det.crop(color.rgb2grey(observation)),t)	
 		reward=reward_funct(observation,t)
-		#if t >= 175:
-		#    print edge_det.img_label(edge_det.crop(color.rgb2grey(observation)),t)
+		#if t >= 1 and t<=10:
+		#    print edge_det.img_label_car(edge_det.crop_car(color.rgb2grey(observation)),t)
 
 	#	print(reward)
-	#	if(t==1):
+	#	if(t==179):
+	#		Image.fromarray(observation).save('frame_'+str(t)+'.png')
 	#		break
 	#	if done:
 	#		print("episode finished after {} timesteps".format(t+1))
