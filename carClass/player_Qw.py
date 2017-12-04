@@ -96,21 +96,20 @@ class player(MDP):
     def succAndProbReward(self, state, action):
         result = []
         #obs,reward,done,info = self.env.step(action)
-	self.state,reward,done,info = self.env.step(action)
+        self.state,reward,done,info = self.env.step(action)
         #reward=200-int(self.reward_funct(obs))
-	reward=200-int(self.reward_funct(self.state))
+        reward=200-int(self.reward_funct(self.state))
         if done:
             return []
 
         #prob = float(1)/float(len(self.actions(obs)))
-	#prob = float(1)/float(len(self.actions(self.state)))
-	prob = 1
+        #prob = float(1)/float(len(self.actions(self.state)))
+        prob = 1
         #result.append((obs,prob,reward))
-	result.append((self.state,prob,reward))
+        result.append((self.state,prob,reward))
         return result
 
-    def discount(self):   
-       
+    def discount(self):
         return 1
 
 
