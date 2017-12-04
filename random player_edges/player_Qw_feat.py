@@ -7,10 +7,11 @@ import pickle
 import os.path
 import random
 import math
-import matplotlib.pyplot as plt
 import edge_det
 from skimage import data, io, filters,color, morphology
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 env = gym.make('Enduro-v0')
 
 def hashState(state):
@@ -135,11 +136,13 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
         raise Exception("Invalid probs: %s" % probs)
 
     totalRewards = []  # The rewards we get on each trial
+    last_rewards = [] #store last state reward value per trail
     for trial in range(numTrials):
         state = mdp.startState()
         sequence = [hashState(state)]
         totalDiscount = 1
         totalReward = 0
+        rewards = []
         for _ in range(maxIterations):
             action = rl.getAction(state)
             transitions = mdp.succAndProbReward(state, action)
@@ -157,12 +160,14 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
 
             rl.incorporateFeedback(state, action, reward, hashState(newState))
             totalReward += totalDiscount * reward
+            rewards.append(reward)
             totalDiscount *= mdp.discount()
             state = newState
         if verbose:
             print "Trial %d (totalReward = %s): %s" % (trial, totalReward, sequence)
+        last_rewards.append(rewards[len(rewards)-1])
         totalRewards.append(totalReward)
-    return totalRewards
+    return totalRewards, last_rewards
 
 # Abstract class: an RLAlgorithm performs reinforcement learning.  All it needs
 # to know is the set of available actions to take.  The simulator (see
@@ -291,12 +296,12 @@ with open('mdp_states_'+str(m)+'.pkl', 'rb') as inputfile:
     mdp = pickle.load(inputfile)
 '''
 #iters = [10,20,30,40,50]
-iters = [50,20,30,40,50]
+iters = [5,20,30,40,50]
 iters_rewards = []
 for i in iters:
     featureExtractor = identityFeatureExtractor
     rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0.2)
-    rewards =simulate(mdp, rl, numTrials=i, maxIterations=1000, verbose=False,
+    total_rewards,last_rewards =simulate(mdp, rl, numTrials=i, maxIterations=1000, verbose=False,
                  sort=False)
     tempweights = rl.weights
     rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0)
@@ -308,22 +313,30 @@ for i in iters:
     #for i in range(len(rlVals)):
     #   print rlVals[i]
     print "actions: ", set(rlVals)
-    print rewards
+    print "total rewards: ",total_rewards
+    print "end state rewards: ", last_rewards
     #print rewards
     #print float(sum(rewards))/float(len(rewards))
-    iters_rewards.append(float(sum(rewards))/float(len(rewards)))
+    iters_rewards.append(float(sum(total_rewards))/float(len(total_rewards)))
     #lst=np.arange(1,i+1)
     #plt.plot(lst.reshape((1,i)),np.asarray(rewards).reshape((1,i)))
     lst = range(1,i+ 1)
-    plt.plot(lst,rewards)
-    plt.ylabel("Rewards")
+    plt.plot(lst,total_rewards)
+    plt.ylabel("Cummulative Rewards")
     plt.xlabel("Episode")
     #plt.show()
-    fig_name = "numTrails_"+str(i)+".png"
+    fig_name = "numTrails_"+str(i)+"cummulative_rewards.png"
     plt.savefig(fig_name)
-    print "saved plot"
+    print "saved plot (total rewards)"
     plt.gcf().clear()
-    if i==50:
+    plt.plot(lst,last_rewards)
+    plt.ylabel("End State Reward")
+    plt.xlabel("Episode")
+    fig_name = "numTrails_"+str(i)+"end_state_reward.png"
+    plt.savefig(fig_name)
+    print "saved plot (last rewards)"
+    plt.gfc().clear()
+    if i==5:
         break
 
 #plt.plot(iters,iters_rewards)
