@@ -9,8 +9,8 @@ import random
 import math
 import edge_det
 from skimage import data, io, filters,color, morphology
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 env = gym.make('Enduro-v0')
 
@@ -296,7 +296,8 @@ with open('mdp_states_'+str(m)+'.pkl', 'rb') as inputfile:
     mdp = pickle.load(inputfile)
 '''
 #iters = [10,20,30,40,50]
-iters = [5,20,30,40,50]
+#iters = [5,20,30,40,50]
+iters = [5]
 iters_rewards = []
 for i in iters:
     featureExtractor = identityFeatureExtractor
@@ -320,24 +321,27 @@ for i in iters:
     iters_rewards.append(float(sum(total_rewards))/float(len(total_rewards)))
     #lst=np.arange(1,i+1)
     #plt.plot(lst.reshape((1,i)),np.asarray(rewards).reshape((1,i)))
-    lst = range(1,i+ 1)
-    plt.plot(lst,total_rewards)
-    plt.ylabel("Cummulative Rewards")
-    plt.xlabel("Episode")
+    #lst = range(1,i+ 1)
+    #plt.plot(lst,total_rewards)
+    #plt.ylabel("Cummulative Rewards")
+    #plt.xlabel("Episode")
     #plt.show()
-    fig_name = "numTrails_"+str(i)+"cummulative_rewards.png"
-    plt.savefig(fig_name)
-    print "saved plot (total rewards)"
-    plt.gcf().clear()
-    plt.plot(lst,last_rewards)
-    plt.ylabel("End State Reward")
-    plt.xlabel("Episode")
-    fig_name = "numTrails_"+str(i)+"end_state_reward.png"
-    plt.savefig(fig_name)
-    print "saved plot (last rewards)"
-    plt.gfc().clear()
-    if i==5:
-        break
+    #fig_name = "numTrails_"+str(i)+"cummulative_rewards.png"
+    #plt.savefig(fig_name)
+    #print "saved plot (total rewards)"
+    #plt.gcf().clear()
+    #plt.plot(lst,last_rewards)
+    #plt.ylabel("End State Reward")
+    #plt.xlabel("Episode")
+    #fig_name = "numTrails_"+str(i)+"end_state_reward.png"
+    #plt.savefig(fig_name)
+    #print "saved plot (last rewards)"
+    #plt.gfc().clear()
+    #save data
+    np.savetxt("total_rewards.csv",np.asarray(total_rewards))
+    np.savetxt("last_rewards.csv",np.asarray(last_rewards))
+    #if i==5:
+    #    break
 
 #plt.plot(iters,iters_rewards)
 #plt.ylabel("Average Rewards")
