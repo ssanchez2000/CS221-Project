@@ -88,23 +88,21 @@ class MDP:
     # MDPAlgorithms to know which states to compute values and policies for.
     # This function sets |self.states| to be the set of all states.
     # m - no of games to run
-    def computeStates(self,m):
+    def computeStates(self):
         #self.states = set()
         self.states=list()
         queue = []
         #self.states.add(self.startState())
         self.states.append(self.startState())
-        for i in range(m):
-            #queue.append(self.startState())
-            queue=self.states[:]
-            while len(queue) > 0:
-                state = queue.pop()
-                #action=random.choice(self.actions(state))
-                for action in self.actions(state):
-                    for newState, prob, reward in self.succAndProbReward(state, action):
-                        if(not any((newState == x).all() for x in self.states)):
-                            self.states.append(newState)
-                            queue.append(newState)
+        queue.append(self.startState())
+        while len(queue) > 0:
+            state = queue.pop()
+            action=random.choice(self.actions(state))
+            #for action in self.actions(state):
+            for newState, prob, reward in self.succAndProbReward(state, action):
+                if(not any((newState == x).all() for x in self.states)):
+                    self.states.append(newState)
+                    queue.append(newState)
         print(len(self.states))
         # print "%d states" % len(self.states)
 # print self.states
@@ -139,8 +137,6 @@ class player(MDP):
         return reward+reward1+reward2
     #our states are obs, returns a list with tuple
     def succAndProbReward(self, state, action):
-
-        env.unwrapped.restore_full_state(state)
         result = []
         obs,reward,done,info = self.env.step(action)
         reward=200-int(self.reward_funct(obs))
@@ -156,7 +152,7 @@ class player(MDP):
 
 observation = env.reset()
 mdp = player(env)
-m=1# no of games we want it to run
+m=20 # no of games we want it to run
 if(os.path.isfile('mdp_states_'+str(m)+'.pkl')):
     print("looks like you've already saved for m="+str(m))
     print("do you want to save again?")
@@ -177,7 +173,7 @@ with open('mdp_states_'+str(m)+'.pkl', 'rb') as inputfile:
     mdp = pickle.load(inputfile)
 
 algorithm = ValueIteration()
-algorithm.solve(mdp, .0001)
+algorithm.solve(mdp, .001)
 #print(algorithm.pi.values())
 #for i_episode in range(1):
     #print(algorithm.pi.values())

@@ -33,21 +33,21 @@ def reward_funct(state,t):
 for i_episode in range(1):
 	observation = env.reset()
 	print(observation.shape)
-	img=Image.fromarray(observation[50:158,35:138])
-	img.show()
+	#img=Image.fromarray(observation[50:158,35:138])
+	#img.show()
 	#print(observation)
 	t=0
 	done=False
 	while(not done):
 		t=t+1
-		#env.render()
+		env.render()
 		state=observation
 		action=env.action_space.sample()
 		action=1
 		observation,reward,done,info=env.step(action)
 		reward=reward_funct(observation,t)
 		print(reward)
-		if(t==1):
+		if(t==1000):
 			break
 		if done:
 			print("episode finished after {} timesteps".format(t+1))

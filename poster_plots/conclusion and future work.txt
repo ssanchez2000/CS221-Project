@@ -1,0 +1,10 @@
+Conclusion:
+We were able to show why Value Iteration would not do well for the given environment due to randomness in the number of frames per steps
+We implemented Q learning which gave an improvement in our performance as compared to our baseline
+With the feature extraction we see a significant jump in our performance as compared to previous models.
+Future Work:
+
+Our next steps would be to expand the actions space to all 9 moves from the current 3 we have shortlisted.
+We are currently running only the first 1000 iterations of the game to train the car in the same terrain.
+We would like to expand to work on the different terrains. From the limited games we have run we noticed
+a significant improvement with Q learning and so with enough episodes we should be able to win the race.
