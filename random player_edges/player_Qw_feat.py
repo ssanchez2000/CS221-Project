@@ -19,42 +19,30 @@ def hashState(state):
         return (hashlib.sha256(str(state[0])).hexdigest(),hashlib.sha256(str(state[1])).hexdigest())
     return hashlib.sha256(state).hexdigest()
 
-class MDPAlgorithm:
-    # Set:
-    # - self.pi: optimal policy (mapping from state to action)
-    # - self.V: values (mapping from state to best values)
-    def solve(self, mdp): raise NotImplementedError("Override me")
+class MDP_Algorithm:
+    def solve_mdp(self, mdp): raise NotImplementedError("Override me please")
 
 
 
-class MDP:
+class MDP_QL:
     # Return the start state.
-    def startState(self): raise NotImplementedError("Override me")
+    def start_State(self): raise NotImplementedError("Override me please")
 
     # Return set of actions possible from |state|.
-    def actions(self, state): raise NotImplementedError("Override me")
+    def actions(self, state): raise NotImplementedError("Override me please")
 
-    # Return a list of (newState, prob, reward) tuples corresponding to edges
-    # coming out of |state|.
-    # Mapping to notation from class:
-    #   state = s, action = a, newState = s', prob = T(s, a, s'), reward = Reward(s, a, s')
-    # If IsEnd(state), return the empty list.
-    def succAndProbReward(self, state, action): raise NotImplementedError("Override me")
+    def succAnd_ProbReward(self, state, action): raise NotImplementedError("Override me please")
 
-    def discount(self): raise NotImplementedError("Override me")
+    def discount(self): raise NotImplementedError("Override me please")
 
-    # Compute set of states reachable from startState.  Helper function for
-    # MDPAlgorithms to know which states to compute values and policies for.
-    # This function sets |self.states| to be the set of all states.
-    # m - no of games to run
     def computeStates(self,m):
         #self.states = set()
         self.states=list()
         queue = []
-        #self.states.add(self.startState())
-        self.states.append(self.startState())
+        #self.states.add(self.start_State())
+        self.states.append(self.start_State())
         for i in range(m):
-            queue.append(self.startState())
+            queue.append(self.start_State())
             while len(queue) > 0:
                 state = queue.pop()
                 action=random.choice(self.actions(state))
@@ -67,7 +55,7 @@ class MDP:
         # print "%d states" % len(self.states)
 # print self.states
 
-class player(MDP):
+class player(MDP_QL):
     #HEre we obs is a numpy array of image observation
     #where env is atari env
     def __init__(self,env):
@@ -80,7 +68,7 @@ class player(MDP):
             A= np.array(A)
             self.values[(A[2,2,0],A[2,5,0],A[4,1,0],A[5,1,0])]=str(i)
 
-    def startState(self):
+    def start_State(self):
         return env.reset()
 
     def actions(self, state):
@@ -121,9 +109,7 @@ class player(MDP):
 
 # Perform |numTrials| of the following:
 # On each trial, take the MDP |mdp| and an RLAlgorithm |rl| and simulates the
-# RL algorithm according to the dynamics of the MDP.
-# Each trial will run for at most |maxIterations|.
-# Return the list of rewards that we get for each trial.
+# Return the list of rewards that we get for each trial (accummulative and for end state).
 def simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
              sort=False):
     # Return i in [0, ..., len(probs)-1] with probability probs[i].
@@ -138,7 +124,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
     totalRewards = []  # The rewards we get on each trial
     last_rewards = [] #store last state reward value per trail
     for trial in range(numTrials):
-        state = mdp.startState()
+        state = mdp.start_State()
         sequence = [hashState(state)]
         totalDiscount = 1
         totalReward = 0
@@ -148,7 +134,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
             transitions = mdp.succAndProbReward(state, action)
             if sort: transitions = sorted(transitions)
             if len(transitions) == 0:
-                rl.incorporateFeedback(state, action, 0, None)
+                rl.incorporate_Feedback(state, action, 0, None)
                 break
 
             # Choose a random transition
@@ -158,7 +144,7 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
             sequence.append(reward)
             sequence.append(hashState(newState))
 
-            rl.incorporateFeedback(state, action, reward, hashState(newState))
+            rl.incorporate_Feedback(state, action, reward, hashState(newState))
             totalReward += totalDiscount * reward
             rewards.append(reward)
             totalDiscount *= mdp.discount()
@@ -172,11 +158,11 @@ def simulate(mdp, rl, numTrials=10, maxIterations=1000, verbose=False,
 # Abstract class: an RLAlgorithm performs reinforcement learning.  All it needs
 # to know is the set of available actions to take.  The simulator (see
 # simulate()) will call getAction() to get an action, perform the action, and
-# then provide feedback (via incorporateFeedback()) to the RL algorithm, so it can adjust
+# then provide feedback (via incorporate_Feedback()) to the RL algorithm, so it can adjust
 # its parameters.
-class RLAlgorithm:
+class RL_Algorithm:
     # Your algorithm will be asked to produce an action given a state.
-    def getAction(self, state): raise NotImplementedError("Override me")
+    def getAction(self, state): raise NotImplementedError("Override me please")
 
     # We will call this function when simulating an MDP, and you should update
     # parameters.
@@ -184,27 +170,22 @@ class RLAlgorithm:
     # 0, None). When this function is called, it indicates that taking action
     # |action| in state |state| resulted in reward |reward| and a transition to state
     # |newState|.
-    def incorporateFeedback(self, state, action, reward, newState): raise NotImplementedError("Override me")
+    def incorporate_Feedback(self, state, action, reward, newState): raise NotImplementedError("Override me please")
 
 # An RL algorithm that acts according to a fixed policy |pi| and doesn't
 # actually do any learning.
-class FixedRLAlgorithm(RLAlgorithm):
+class Fixed_RLAlgorithm(RL_Algorithm):
     def __init__(self, pi): self.pi = pi
 
     # Just return the action given by the policy.
     def getAction(self, state): return self.pi[state]
 
     # Don't do anything: just stare off into space.
-def incorporateFeedback(self, state, action, reward, newState): pass
+def incorporate_Feedback(self, state, action, reward, newState): pass
 
 
-# Performs Q-learning.  Read util.RLAlgorithm for more information.
-# actions: a function that takes a state and returns a list of actions.
-# discount: a number between 0 and 1, which determines the discount factor
-# featureExtractor: a function that takes a state and action and returns a list of (feature name, feature value) pairs.
-# explorationProb: the epsilon value indicating how frequently the policy
-# returns a random action
-class QLearningAlgorithm(RLAlgorithm):
+
+class QLearning_Algorithm(RL_Algorithm):
     def __init__(self, actions, discount, featureExtractor, explorationProb=0.2):
         self.actions = actions
         self.discount = discount
@@ -240,7 +221,7 @@ class QLearningAlgorithm(RLAlgorithm):
     # Note that if s is a terminal state, then s' will be None.  Remember to check for this.
     # You should update the weights using self.getStepSize(); use
     # self.getQ() to compute the current estimate of the parameters.
-    def incorporateFeedback(self, state, action, reward, newState):
+    def incorporate_Feedback(self, state, action, reward, newState):
         # BEGIN_YOUR_CODE (our solution is 12 lines of code, but don't worry if you deviate from this)
         #check if s is an endcase
         def GETAction(s):
@@ -264,7 +245,7 @@ class QLearningAlgorithm(RLAlgorithm):
 
 # Return a single-element list containing a binary (indicator) feature
 # for the existence of the (state, action) pair.  Provides no generalization.
-def identityFeatureExtractor(state, action):
+def FeatureExtractor(state, action):
     Image.fromarray(observation).save('temp_state.png')
     image = io.imread('temp_state.png')
     featureKey = (state, action)
@@ -300,12 +281,12 @@ with open('mdp_states_'+str(m)+'.pkl', 'rb') as inputfile:
 iters = [5]
 iters_rewards = []
 for i in iters:
-    featureExtractor = identityFeatureExtractor
-    rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0.2)
+    featureExtractor = FeatureExtractor
+    rl = QLearning_Algorithm(mdp.actions,mdp.discount(),featureExtractor,0.2)
     total_rewards,last_rewards =simulate(mdp, rl, numTrials=i, maxIterations=1000, verbose=False,
                  sort=False)
     tempweights = rl.weights
-    rl = QLearningAlgorithm(mdp.actions,mdp.discount(),featureExtractor,0)
+    rl = QLearning_Algorithm(mdp.actions,mdp.discount(),featureExtractor,0)
     rl.weights = tempweights
     mdp.computeStates(1)
     rlVals = []
